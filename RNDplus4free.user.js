@@ -55,7 +55,7 @@ function change_page(){
     // remove headline 2
     document.querySelectorAll("[class^=Headlinestyled__Headline")[1].innerHTML = "";
 
-    // remove article stub
+    // remove article skeleton
     document.querySelectorAll("[class^=Articlestyled__ArticleBodyWrapper")[0].innerHTML = "";
 
     // insert gathered article text
@@ -66,6 +66,9 @@ function insert_article(){
     var html = document.querySelectorAll("[class^=Textstyled__Text")[0].parentElement;
     var headline_class = document.querySelectorAll("[class^=Headlinestyled__Headline")[1].className;
     var inline_text_class = document.querySelectorAll("[class^=Textstyled__InlineText")[0].className;
+
+    // drop first paragraph since it is already rendered for the stub
+    article_elements.shift();
 
     article_elements.forEach((element) => {
         if (element.type == "header") {
