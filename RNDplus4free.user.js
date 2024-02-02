@@ -63,16 +63,15 @@ function change_page(){
 }
 
 function insert_article(){
-    var html = document.querySelectorAll("[class^=Textstyled__Text")[0].parentElement;
-    var headline_class = document.querySelectorAll("[class^=Headlinestyled__Headline")[1].className;
-    var inline_text_class = document.querySelectorAll("[class^=Textstyled__InlineText")[0].className;
+    let html = document.querySelectorAll("[class^=Textstyled__Text")[0].parentElement;
+    let headline_class = document.querySelectorAll("[class^=Headlinestyled__Headline")[1].className;
+    let inline_text_class = document.querySelectorAll("[class^=Textstyled__InlineText")[0].className;
 
-    // drop first paragraph since it is already rendered for the stub
-    article_elements.shift();
+    let isFirstTextElement = true;
 
     article_elements.forEach((element) => {
         if (element.type == "header") {
-            var h2 = document.createElement("h2");
+            let h2 = document.createElement("h2");
             h2.className = headline_class;
             h2.innerHTML = element.text;
             h2.style.marginTop = "8px";
@@ -80,25 +79,32 @@ function insert_article(){
             html.append(h2);
         }
         else if (element.type == "text") {
-            var p = document.createElement("p");
+            // drop first paragraph since it is already rendered for the stub
+            if (isFirstTextElement) {
+                isFirstTextElement = false;
+
+                return;
+            }
+
+            let p = document.createElement("p");
             p.className = inline_text_class;
             p.innerHTML = element.text;
 
             html.append(p);
         }
         else if (element.type == "list" && !element.list.isOrdered) {
-            var ul = document.createElement("ul");
+            let ul = document.createElement("ul");
             ul.className = inline_text_class;
 
             element.list.items.forEach((item) => {
-                var li = document.createElement("li");
+                let li = document.createElement("li");
                 li.innerHTML = item.text;
                 ul.append(li);
             });
 
             html.append(ul);
         }
-        else if (element.type != "ad") {
+        else if (!["ad", "newsletterAd"].includes(element.type)) {
             console.log("Unknown content element type", element);
         }
     });
