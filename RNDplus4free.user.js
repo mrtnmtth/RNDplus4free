@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name     RNDplus4free
 // @description Laden des Artikel-Textes aus dem JSON im Quelltext
-// @version  0.4.2
+// @version  0.5.0
 // @match https://*.haz.de/*.html*
 // @match https://*.neuepresse.de/*.html*
 // ==/UserScript==
@@ -65,9 +65,10 @@ function change_page(){
 function insert_article(){
     let html = document.querySelectorAll("[class^=Textstyled__Text")[0].parentElement;
     let headline_class = document.querySelectorAll("[class^=Headlinestyled__Headline")[1].className;
-    let inline_text_class = document.querySelectorAll("[class^=Textstyled__InlineText")[0].className;
+    let inline_text_class = document.querySelectorAll("[class^=Textstyled__Text")[0].className;
+    inline_text_class = inline_text_class.match(/\b\w{6}\b/);
 
-    let isFirstTextElement = true;
+    document.querySelectorAll("[class^=Textstyled__Text")[0].className = inline_text_class;
 
     article_elements.forEach((element) => {
         if (element.type == "header") {
@@ -79,13 +80,6 @@ function insert_article(){
             html.append(h2);
         }
         else if (element.type == "text") {
-            // drop first paragraph since it is already rendered for the stub
-            if (isFirstTextElement) {
-                isFirstTextElement = false;
-
-                return;
-            }
-
             let p = document.createElement("p");
             p.className = inline_text_class;
             p.innerHTML = element.text;
