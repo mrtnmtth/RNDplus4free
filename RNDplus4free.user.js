@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name     RNDplus4free
 // @description Laden des Artikel-Textes aus dem JSON im Quelltext
-// @version  0.5.0
+// @version  0.6.0
 // @match https://*.haz.de/*.html*
 // @match https://*.neuepresse.de/*.html*
 // ==/UserScript==
@@ -9,7 +9,6 @@
 var site_loaded = false;
 var script_text = "";
 var article = "";
-var article_elements = [];
 
 var teaser_node = document.querySelectorAll("[class^=ArticleHeadstyled__ArticleTeaserContainer]")[0];
 var loader_node = document.querySelectorAll("[class^=ArticleContentLoader]")[0];
@@ -38,10 +37,6 @@ function get_article(){
             try
             {
                 article = JSON.parse(script_text.match(/Fusion.globalContent=(\{[\s\S]*?});/)[1]);
-                if(article.elements != "")
-                {
-                    article_elements = article.elements;
-                }
             }
             catch(err) {
                 console.log(script_text);
@@ -58,19 +53,83 @@ function change_page(){
     // remove article skeleton
     document.querySelectorAll("[class^=Articlestyled__ArticleBodyWrapper")[0].innerHTML = "";
 
-    // insert gathered article text
+    // insert gathered article metadata & text
+    reset_teaser_style();
+    insert_article_details();
+    insert_divider();
     insert_article();
 }
 
+function reset_teaser_style() {
+    let teaser = document.querySelectorAll("[class^=Textstyled__Text")[0];
+    teaser.style.overflow = "visible";
+    teaser.style.height = "unset";
+}
+
+function insert_article_details() {
+    let html = document.querySelectorAll("[class^=ArticleHeadstyled__ArticleHeader]")[0];
+    let a_class = document.querySelectorAll("[class^=Linkstyled__Link")[1].className.match(/\b\w{6}\b/);
+
+    let detailsContainer = document.createElement("div");
+    detailsContainer.style.marginBottom = "24px";
+    detailsContainer.style.marginTop = "16px";
+
+    detailsContainer.style.fontFamily = "Inter, Arial-adjusted-for-Inter, Roboto-adjusted-for-Inter, sans-serif";
+    detailsContainer.style.fontSize = "14px";
+    detailsContainer.style.fontWeight = "500";
+    detailsContainer.style.letterSpacing = "0px";
+    detailsContainer.style.lineHeight = "18px";
+
+    article.authors.forEach((author) => {
+        let a = document.createElement("a");
+        a.rel = "author";
+        a.text = author.name;
+
+        if (author.url) {
+            a.href = author.url;
+        }
+
+        let articleMetaAuthors = document.createElement("address");
+
+        articleMetaAuthors.append(a);
+        detailsContainer.append(articleMetaAuthors);
+    });
+
+    let time = document.createElement("time");
+    time.datetime = article.firstPublishDate;
+    let date = new Date(article.firstPublishDate);
+    time.innerText = date.toLocaleString();
+
+    detailsContainer.append(time);
+    html.append(detailsContainer);
+}
+
+function insert_divider() {
+    let html = document.querySelectorAll("[class^=ArticleHeadstyled__ArticleHeader]")[0];
+
+    let dividerWrapper = document.createElement("div");
+    dividerWrapper.className = "ArticleHeadstyled__ArticleDivider";
+    dividerWrapper.style.marginBottom = "24px";
+    dividerWrapper.style.marginTop = "8px";
+
+    let divider = document.createElement("div");
+    divider.className = "Dividerstyled__Divider ";
+    divider.style.borderTop = "2px dotted rgb(197, 210, 221)";
+    divider.style.fontSize = "2px";
+    divider.style.height = "0px";
+    divider.style.width = "100%";
+
+    dividerWrapper.append(divider);
+    html.append(dividerWrapper);
+}
+
 function insert_article(){
-    let html = document.querySelectorAll("[class^=Textstyled__Text")[0].parentElement;
+    let html = document.querySelectorAll("[class^=ArticleHeadstyled__ArticleHeader")[0];
     let headline_class = document.querySelectorAll("[class^=Headlinestyled__Headline")[1].className;
     let inline_text_class = document.querySelectorAll("[class^=Textstyled__Text")[0].className;
     inline_text_class = inline_text_class.match(/\b\w{6}\b/);
 
-    document.querySelectorAll("[class^=Textstyled__Text")[0].className = inline_text_class;
-
-    article_elements.forEach((element) => {
+    article.elements.forEach((element) => {
         if (element.type == "header") {
             let h2 = document.createElement("h2");
             h2.className = headline_class;
