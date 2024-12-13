@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name     RNDplus4free
 // @description Laden des Artikel-Textes aus dem JSON im Quelltext
-// @version  0.6.0
+// @version  0.6.1
 // @match https://*.haz.de/*.html*
 // @match https://*.neuepresse.de/*.html*
 // ==/UserScript==
@@ -51,7 +51,7 @@ function change_page(){
     document.querySelectorAll("[class^=Headlinestyled__Headline")[1].innerHTML = "";
 
     // remove article skeleton
-    document.querySelectorAll("[class^=Articlestyled__ArticleBodyWrapper")[0].innerHTML = "";
+    document.querySelectorAll("[class^=Articlestyled__CenteredContentWrapper")[1].innerHTML = "";
 
     // insert gathered article metadata & text
     reset_teaser_style();
