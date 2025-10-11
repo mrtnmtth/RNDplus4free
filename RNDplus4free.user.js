@@ -1,39 +1,39 @@
 // ==UserScript==
 // @name     RNDplus4free
 // @description Laden des Artikel-Textes aus dem JSON im Quelltext
-// @version  0.6.1
+// @version  0.6.2
 // @match https://*.haz.de/*.html*
 // @match https://*.neuepresse.de/*.html*
 // ==/UserScript==
 
-var site_loaded = false;
-var script_text = "";
 var article = "";
 
-var teaser_node = document.querySelectorAll("[class^=ArticleHeadstyled__ArticleTeaserContainer]")[0];
+var app_node = document.getElementById("fusion-app");
 var loader_node = document.querySelectorAll("[class^=ArticleContentLoader]")[0];
 
 // MutationObserver to detect when the article teaser is loaded
 let observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
         if (mutation.type !== "childList") continue;
-        if (mutation.target.id === "fusion-app") {
-            let ad_wrapper = document.getElementById("piano-lightbox-article-haz");
-            if (ad_wrapper) {
-                ad_wrapper.remove();
-                get_article();
-                change_page();
-            }
+
+        let ad_wrapper = document.getElementById("piano-lightbox-article-haz");
+        if (ad_wrapper) {
+            ad_wrapper.remove();
+            get_article();
+            change_page();
+
+            observer.disconnect();
+            break;
         }
     }
 });
 
-observer.observe(document, {attributes: false, childList: true, characterData: false, subtree: true});
+observer.observe(app_node, {attributes: false, childList: true, characterData: false, subtree: true});
 
 function get_article(){
     let script = document.getElementById("fusion-metadata");
 
-            script_text=script.innerHTML;
+            let script_text=script.innerHTML;
             try
             {
                 article = JSON.parse(script_text.match(/Fusion.globalContent=(\{[\s\S]*?});/)[1]);
