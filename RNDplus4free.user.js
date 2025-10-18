@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name     RNDplus4free
 // @description Laden des Artikel-Textes aus dem JSON im Quelltext
-// @version  0.6.2
+// @version  0.6.3
 // @match https://*.haz.de/*.html*
 // @match https://*.neuepresse.de/*.html*
 // ==/UserScript==
@@ -18,6 +18,11 @@ let observer = new MutationObserver((mutations) => {
 
         let ad_wrapper = document.getElementById("piano-lightbox-article-haz");
         if (ad_wrapper) {
+            if (!is_paywalled_article()) {
+                observer.disconnect();
+                break;
+            }
+
             ad_wrapper.remove();
             get_article();
             change_page();
@@ -29,6 +34,12 @@ let observer = new MutationObserver((mutations) => {
 });
 
 observer.observe(app_node, {attributes: false, childList: true, characterData: false, subtree: true});
+
+function is_paywalled_article() {
+    const content_node = document.getElementById("contentMain");
+
+    return content_node.querySelectorAll("[class^=PaidIconstyled]").length > 0;
+}
 
 function get_article(){
     let script = document.getElementById("fusion-metadata");
