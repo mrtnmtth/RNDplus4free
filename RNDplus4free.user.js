@@ -79,7 +79,6 @@ function reset_teaser_style() {
 
 function insert_article_details() {
     let html = document.querySelectorAll("[class^=ArticleHeadstyled__ArticleHeader]")[0];
-    let a_class = document.querySelectorAll("[class^=Linkstyled__Link")[1].className.match(/\b\w{6}\b/);
 
     let detailsContainer = document.createElement("div");
     detailsContainer.style.marginBottom = "24px";
