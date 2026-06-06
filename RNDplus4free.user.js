@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name     RNDplus4free
 // @description Laden des Artikel-Textes aus dem JSON im Quelltext
-// @version  0.8.0
+// @version  0.8.1
 // @match https://*.haz.de/*.html*
 // @match https://*.neuepresse.de/*.html*
 // @match https://*.sn-online.de/*.html*
@@ -20,6 +20,7 @@
 // @match https://*.szlz.de/*.html*
 // @match https://*.saechsische.de/*.html*
 // @match https://*.dieharke.de/*.html*
+// @grant none
 // ==/UserScript==
 
 let article = "";
@@ -50,6 +51,10 @@ let observer = new MutationObserver((mutations) => {
 });
 
 observer.observe(app_node, {attributes: false, childList: true, characterData: false, subtree: true});
+
+// stop observing if the paywall lightbox never shows up, so the observer
+// does not keep running for the lifetime of the page
+setTimeout(() => observer.disconnect(), 20000);
 
 function is_paywalled_article() {
     const content_node = document.getElementById("contentMain");
@@ -244,7 +249,7 @@ function insert_article(){
     let html = document.querySelectorAll('[class^="ArticleHeadstyled__ArticleHeader"]')[0];
     let headline_class = document.querySelectorAll('[class^="Headlinestyled__Headline"]')[1].className;
     let inline_text_class = document.querySelectorAll('[class^="Textstyled__Text"]')[0].className;
-    inline_text_class = inline_text_class.match(/\b\w{6}\b/);
+    inline_text_class = inline_text_class.match(/\b\w{6}\b/)?.[0];
 
     // element types that carry no article body and are intentionally dropped:
     // ads, paywall/newsletter widget slots and related-article teasers
