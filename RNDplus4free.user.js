@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name     RNDplus4free
 // @description Laden des Artikel-Textes aus dem JSON im Quelltext
-// @version  0.6.3
+// @version  0.6.4
 // @match https://*.haz.de/*.html*
 // @match https://*.neuepresse.de/*.html*
 // ==/UserScript==
 
-var article = "";
+let article = "";
 
-var app_node = document.getElementById("fusion-app");
+const app_node = document.getElementById("fusion-app");
 
 // MutationObserver to detect when the article teaser is loaded
 let observer = new MutationObserver((mutations) => {
@@ -23,8 +23,9 @@ let observer = new MutationObserver((mutations) => {
             }
 
             ad_wrapper.remove();
-            get_article();
-            change_page();
+            if (get_article()) {
+                change_page();
+            }
 
             observer.disconnect();
             break;
@@ -42,15 +43,17 @@ function is_paywalled_article() {
 
 function get_article(){
     let script = document.getElementById("fusion-metadata");
+    let script_text = script.innerHTML;
 
-            let script_text=script.innerHTML;
-            try
-            {
-                article = JSON.parse(script_text.match(/Fusion.globalContent=(\{[\s\S]*?});/)[1]);
-            }
-            catch(err) {
-                console.log(script_text);
-            }
+    try {
+        article = JSON.parse(script_text.match(/Fusion.globalContent=(\{[\s\S]*?});/)[1]);
+        return true;
+    }
+    catch(err) {
+        console.error("RNDplus4free: failed to parse globalContent", err);
+        console.log(script_text);
+        return false;
+    }
 }
 
 function change_page(){
