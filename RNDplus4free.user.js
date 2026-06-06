@@ -9,7 +9,6 @@
 var article = "";
 
 var app_node = document.getElementById("fusion-app");
-var loader_node = document.querySelectorAll("[class^=ArticleContentLoader]")[0];
 
 // MutationObserver to detect when the article teaser is loaded
 let observer = new MutationObserver((mutations) => {
@@ -56,13 +55,13 @@ function get_article(){
 
 function change_page(){
     // make header fully visible
-    document.querySelectorAll("[class^=ArticleHeadstyled__ArticleTeaserContainer]")[0].style.height = "100%";
+    document.querySelectorAll('[class^="ArticleHeadstyled__ArticleTeaserContainer"]')[0].style.height = "100%";
 
     // remove headline 2
-    document.querySelectorAll("[class^=Headlinestyled__Headline")[1].innerHTML = "";
+    document.querySelectorAll('[class^="Headlinestyled__Headline"]')[1].innerHTML = "";
 
     // remove article skeleton
-    document.querySelectorAll("[class^=Articlestyled__CenteredContentWrapper")[1].innerHTML = "";
+    document.querySelectorAll('[class^="Articlestyled__CenteredContentWrapper"]')[1].innerHTML = "";
 
     // insert gathered article metadata & text
     reset_teaser_style();
@@ -72,13 +71,13 @@ function change_page(){
 }
 
 function reset_teaser_style() {
-    let teaser = document.querySelectorAll("[class^=Textstyled__Text")[0];
+    let teaser = document.querySelectorAll('[class^="Textstyled__Text"]')[0];
     teaser.style.overflow = "visible";
     teaser.style.height = "unset";
 }
 
 function insert_article_details() {
-    let html = document.querySelectorAll("[class^=ArticleHeadstyled__ArticleHeader]")[0];
+    let html = document.querySelectorAll('[class^="ArticleHeadstyled__ArticleHeader"]')[0];
 
     let detailsContainer = document.createElement("div");
     detailsContainer.style.marginBottom = "24px";
@@ -115,7 +114,7 @@ function insert_article_details() {
 }
 
 function insert_divider() {
-    let html = document.querySelectorAll("[class^=ArticleHeadstyled__ArticleHeader]")[0];
+    let html = document.querySelectorAll('[class^="ArticleHeadstyled__ArticleHeader"]')[0];
 
     let dividerWrapper = document.createElement("div");
     dividerWrapper.className = "ArticleHeadstyled__ArticleDivider";
@@ -134,9 +133,9 @@ function insert_divider() {
 }
 
 function insert_article(){
-    let html = document.querySelectorAll("[class^=ArticleHeadstyled__ArticleHeader")[0];
-    let headline_class = document.querySelectorAll("[class^=Headlinestyled__Headline")[1].className;
-    let inline_text_class = document.querySelectorAll("[class^=Textstyled__Text")[0].className;
+    let html = document.querySelectorAll('[class^="ArticleHeadstyled__ArticleHeader"]')[0];
+    let headline_class = document.querySelectorAll('[class^="Headlinestyled__Headline"]')[1].className;
+    let inline_text_class = document.querySelectorAll('[class^="Textstyled__Text"]')[0].className;
     inline_text_class = inline_text_class.match(/\b\w{6}\b/);
 
     article.elements.forEach((element) => {
