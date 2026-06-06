@@ -151,6 +151,48 @@ function insert_divider() {
     html.append(dividerWrapper);
 }
 
+function create_image(info) {
+    let figure = document.createElement("figure");
+    figure.style.margin = "16px 0";
+
+    let img = document.createElement("img");
+    // imageInfo.src is the raw CloudFront origin (not public); the site
+    // renders the signed resizer URL built from the image id + auth token
+    img.src = `/resizer/v2/${info.id}.jpg?auth=${Object.values(info.auth)[0]}&quality=70&width=828`;
+    img.alt = info.alt || "";
+    img.loading = "lazy";
+    img.style.width = "100%";
+    img.style.height = "auto";
+    figure.append(img);
+
+    if (info.caption || info.credit) {
+        let figcaption = document.createElement("figcaption");
+        figcaption.style.fontFamily = "Inter, Arial-adjusted-for-Inter, Roboto-adjusted-for-Inter, sans-serif";
+        figcaption.style.fontSize = "12px";
+        figcaption.style.lineHeight = "16px";
+        figcaption.style.marginTop = "8px";
+
+        if (info.caption) {
+            let caption = document.createElement("div");
+            caption.innerText = info.caption;
+            caption.style.color = "var(--ldc-52)";
+            figcaption.append(caption);
+        }
+
+        if (info.credit) {
+            let credit = document.createElement("div");
+            credit.innerText = info.credit;
+            credit.style.color = "var(--ldc-63)";
+            credit.style.marginTop = "8px";
+            figcaption.append(credit);
+        }
+
+        figure.append(figcaption);
+    }
+
+    return figure;
+}
+
 function insert_article(){
     let html = document.querySelectorAll('[class^="ArticleHeadstyled__ArticleHeader"]')[0];
     let headline_class = document.querySelectorAll('[class^="Headlinestyled__Headline"]')[1].className;
@@ -172,6 +214,9 @@ function insert_article(){
             p.innerHTML = element.text;
 
             html.append(p);
+        }
+        else if (element.type == "image") {
+            html.append(create_image(element.imageInfo));
         }
         else if (element.type == "list" && !element.list.isOrdered) {
             let ul = document.createElement("ul");
