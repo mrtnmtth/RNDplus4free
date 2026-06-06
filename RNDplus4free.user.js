@@ -1,9 +1,25 @@
 // ==UserScript==
 // @name     RNDplus4free
 // @description Laden des Artikel-Textes aus dem JSON im Quelltext
-// @version  0.6.4
+// @version  0.7.0
 // @match https://*.haz.de/*.html*
 // @match https://*.neuepresse.de/*.html*
+// @match https://*.sn-online.de/*.html*
+// @match https://*.waz-online.de/*.html*
+// @match https://*.dnn.de/*.html*
+// @match https://*.goettinger-tageblatt.de/*.html*
+// @match https://*.lvz.de/*.html*
+// @match https://*.ln-online.de/*.html*
+// @match https://*.kn-online.de/*.html*
+// @match https://*.maz-online.de/*.html*
+// @match https://*.ostsee-zeitung.de/*.html*
+// @match https://*.paz-online.de/*.html*
+// @match https://*.rnd.de/*.html*
+// @match https://*.dewezet.de/*.html*
+// @match https://*.cz.de/*.html*
+// @match https://*.szlz.de/*.html*
+// @match https://*.saechsische.de/*.html*
+// @match https://*.dieharke.de/*.html*
 // ==/UserScript==
 
 let article = "";
@@ -15,7 +31,7 @@ let observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
         if (mutation.type !== "childList") continue;
 
-        let ad_wrapper = document.getElementById("piano-lightbox-article-haz");
+        let ad_wrapper = document.querySelector('[id^="piano-lightbox-article"]');
         if (ad_wrapper) {
             if (!is_paywalled_article()) {
                 observer.disconnect();
