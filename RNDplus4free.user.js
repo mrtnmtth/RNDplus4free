@@ -246,6 +246,10 @@ function insert_article(){
     let inline_text_class = document.querySelectorAll('[class^="Textstyled__Text"]')[0].className;
     inline_text_class = inline_text_class.match(/\b\w{6}\b/);
 
+    // element types that carry no article body and are intentionally dropped:
+    // ads, paywall/newsletter widget slots and related-article teasers
+    let ignored_types = ["ad", "newsletterAd", "piano", "moreItems"];
+
     article.elements.forEach((element) => {
         if (element.type == "header") {
             let h2 = document.createElement("h2");
@@ -280,7 +284,10 @@ function insert_article(){
 
             html.append(ul);
         }
-        else if (!["ad", "newsletterAd"].includes(element.type)) {
+        else if (ignored_types.includes(element.type)) {
+            // intentionally skipped
+        }
+        else {
             console.log("Unknown content element type", element);
         }
     });
