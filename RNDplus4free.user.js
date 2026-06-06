@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name     RNDplus4free
 // @description Laden des Artikel-Textes aus dem JSON im Quelltext
-// @version  0.7.0
+// @version  0.8.0
 // @match https://*.haz.de/*.html*
 // @match https://*.neuepresse.de/*.html*
 // @match https://*.sn-online.de/*.html*
@@ -193,6 +193,53 @@ function create_image(info) {
     return figure;
 }
 
+function create_quote(element) {
+    let figure = document.createElement("figure");
+    figure.style.display = "flex";
+    figure.style.flexDirection = "column";
+    figure.style.alignItems = "center";
+    figure.style.textAlign = "center";
+    figure.style.borderTop = "1px solid var(--ldc-25)";
+    figure.style.borderBottom = "1px solid var(--ldc-25)";
+    figure.style.margin = "16px 0";
+    figure.style.padding = "32px";
+
+    // green accent bar the site renders via a ::before pseudo-element
+    let accent = document.createElement("div");
+    accent.style.width = "40px";
+    accent.style.height = "2px";
+    accent.style.marginBottom = "16px";
+    accent.style.backgroundColor = "#6bb024";
+    figure.append(accent);
+
+    let blockquote = document.createElement("blockquote");
+    blockquote.style.fontFamily = '"Source Serif Pro", Palatino, "Droid Serif", serif';
+    blockquote.style.fontSize = "21px";
+    blockquote.style.fontWeight = "600";
+    blockquote.style.lineHeight = "26px";
+    blockquote.style.margin = "0";
+
+    element.elements.forEach((text) => {
+        let p = document.createElement("p");
+        p.innerHTML = text;
+        blockquote.append(p);
+    });
+
+    figure.append(blockquote);
+
+    if (element.author) {
+        let figcaption = document.createElement("figcaption");
+        figcaption.innerText = element.author;
+        figcaption.style.fontFamily = "Inter, Arial-adjusted-for-Inter, Roboto-adjusted-for-Inter, sans-serif";
+        figcaption.style.fontSize = "14px";
+        figcaption.style.marginTop = "16px";
+        figcaption.style.color = "var(--ldc-63)";
+        figure.append(figcaption);
+    }
+
+    return figure;
+}
+
 function insert_article(){
     let html = document.querySelectorAll('[class^="ArticleHeadstyled__ArticleHeader"]')[0];
     let headline_class = document.querySelectorAll('[class^="Headlinestyled__Headline"]')[1].className;
@@ -217,6 +264,9 @@ function insert_article(){
         }
         else if (element.type == "image") {
             html.append(create_image(element.imageInfo));
+        }
+        else if (element.type == "quote") {
+            html.append(create_quote(element));
         }
         else if (element.type == "list" && !element.list.isOrdered) {
             let ul = document.createElement("ul");
