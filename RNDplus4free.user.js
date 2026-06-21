@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name     RNDplus4free
 // @description Laden des Artikel-Textes aus dem JSON im Quelltext
-// @version  0.8.2
+// @version  0.8.3
 // @match https://*.haz.de/*.html*
 // @match https://*.neuepresse.de/*.html*
 // @match https://*.sn-online.de/*.html*
@@ -187,7 +187,7 @@ function insert_divider(html) {
 
     let divider = document.createElement("div");
     divider.className = "Dividerstyled__Divider ";
-    divider.style.borderTop = "2px dotted rgb(197, 210, 221)";
+    divider.style.borderTop = "2px dotted var(--ldc-63)";
     divider.style.fontSize = "2px";
     divider.style.height = "0px";
     divider.style.width = "100%";
@@ -252,7 +252,7 @@ function create_quote(element) {
     accent.style.width = "40px";
     accent.style.height = "2px";
     accent.style.marginBottom = "16px";
-    accent.style.backgroundColor = "#6bb024";
+    accent.style.backgroundColor = "var(--primary-color)";
     figure.append(accent);
 
     let blockquote = document.createElement("blockquote");
