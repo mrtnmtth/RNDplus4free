@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name     RNDplus4free
 // @description Laden des Artikel-Textes aus dem JSON im Quelltext
-// @version  0.8.1
+// @version  0.8.2
 // @match https://*.haz.de/*.html*
 // @match https://*.neuepresse.de/*.html*
 // @match https://*.sn-online.de/*.html*
@@ -27,34 +27,76 @@ let article = "";
 
 const app_node = document.getElementById("fusion-app");
 
-// MutationObserver to detect when the article teaser is loaded
-let observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-        if (mutation.type !== "childList") continue;
+// Piano renders the real body, then swaps in a skeleton + paywall, wiping
+// anything we inserted. So we keep observing and re-apply whenever it reblocks.
+let apply_scheduled = false;
 
-        let ad_wrapper = document.querySelector('[id^="piano-lightbox-article"]');
-        if (ad_wrapper) {
-            if (!is_paywalled_article()) {
-                observer.disconnect();
-                break;
-            }
+let observer = new MutationObserver(() => {
+    if (apply_scheduled) return;
+    apply_scheduled = true;
 
-            ad_wrapper.remove();
-            if (get_article()) {
-                change_page();
-            }
-
-            observer.disconnect();
-            break;
-        }
-    }
+    requestAnimationFrame(() => {
+        apply_scheduled = false;
+        apply();
+    });
 });
 
-observer.observe(app_node, {attributes: false, childList: true, characterData: false, subtree: true});
+observer.observe(app_node, {childList: true, subtree: true});
 
-// stop observing if the paywall lightbox never shows up, so the observer
-// does not keep running for the lifetime of the page
-setTimeout(() => observer.disconnect(), 20000);
+apply();
+
+setTimeout(() => observer.disconnect(), 30000);
+
+function apply() {
+    if (!is_paywalled_article()) return;
+    // leave the page alone while the real body is present (hydration flash,
+    // free-period, subscriber); only step in once it's down to the skeleton
+    if (is_content_loaded()) return;
+
+    const paywall = get_paywall();
+    if (paywall) paywall.style.display = "none";
+
+    if (!article && !get_article()) return;
+
+    if (!document.getElementById("rndplus4free-content")) {
+        change_page();
+    }
+
+    remove_skeleton();
+}
+
+function is_content_loaded() {
+    const body = document.querySelectorAll('[class^="Articlestyled__CenteredContentWrapper"]')[1];
+    if (!body) return false;
+
+    return body.querySelector('p, [class^="Textstyled__Text"]') !== null;
+}
+
+function remove_skeleton() {
+    const body = document.querySelectorAll('[class^="Articlestyled__CenteredContentWrapper"]')[1];
+
+    // guard against clearing an empty node, which would retrigger the observer
+    if (body && body.childElementCount > 0) {
+        body.innerHTML = "";
+    }
+}
+
+function get_paywall() {
+    // container ids carry a site-specific suffix (e.g. ...-article-haz)
+    const selectors = [
+        '[id^="piano-sticky-template-article"]',
+        '[id^="piano-lightbox-article"]',
+    ];
+
+    for (const selector of selectors) {
+        const container = document.querySelector(selector);
+        if (container && container.childElementCount > 0) {
+            return container;
+        }
+    }
+
+    return null;
+}
 
 function is_paywalled_article() {
     const content_node = document.getElementById("contentMain");
@@ -78,20 +120,22 @@ function get_article(){
 }
 
 function change_page(){
-    // make header fully visible
-    document.querySelectorAll('[class^="ArticleHeadstyled__ArticleTeaserContainer"]')[0].style.height = "100%";
+    let header = document.querySelectorAll('[class^="ArticleHeadstyled__ArticleHeader"]')[0];
+    if (!header) return;
 
-    // remove headline 2
-    document.querySelectorAll('[class^="Headlinestyled__Headline"]')[1].innerHTML = "";
-
-    // remove article skeleton
-    document.querySelectorAll('[class^="Articlestyled__CenteredContentWrapper"]')[1].innerHTML = "";
-
-    // insert gathered article metadata & text
+    let teaserContainer = document.querySelectorAll('[class^="ArticleHeadstyled__ArticleTeaserContainer"]')[0];
+    if (teaserContainer) teaserContainer.style.height = "100%";
     reset_teaser_style();
-    insert_article_details();
-    insert_divider();
-    insert_article();
+
+    // single identifiable container so apply() can detect/replace it as a unit
+    let content = document.createElement("div");
+    content.id = "rndplus4free-content";
+
+    insert_article_details(content);
+    insert_divider(content);
+    insert_article(content);
+
+    header.append(content);
 }
 
 function reset_teaser_style() {
@@ -100,9 +144,7 @@ function reset_teaser_style() {
     teaser.style.height = "unset";
 }
 
-function insert_article_details() {
-    let html = document.querySelectorAll('[class^="ArticleHeadstyled__ArticleHeader"]')[0];
-
+function insert_article_details(html) {
     let detailsContainer = document.createElement("div");
     detailsContainer.style.marginBottom = "24px";
     detailsContainer.style.marginTop = "16px";
@@ -137,9 +179,7 @@ function insert_article_details() {
     html.append(detailsContainer);
 }
 
-function insert_divider() {
-    let html = document.querySelectorAll('[class^="ArticleHeadstyled__ArticleHeader"]')[0];
-
+function insert_divider(html) {
     let dividerWrapper = document.createElement("div");
     dividerWrapper.className = "ArticleHeadstyled__ArticleDivider";
     dividerWrapper.style.marginBottom = "24px";
@@ -161,8 +201,7 @@ function create_image(info) {
     figure.style.margin = "16px 0";
 
     let img = document.createElement("img");
-    // imageInfo.src is the raw CloudFront origin (not public); the site
-    // renders the signed resizer URL built from the image id + auth token
+    // info.src is the non-public origin; build the signed resizer URL instead
     img.src = `/resizer/v2/${info.id}.jpg?auth=${Object.values(info.auth)[0]}&quality=70&width=828`;
     img.alt = info.alt || "";
     img.loading = "lazy";
@@ -209,7 +248,6 @@ function create_quote(element) {
     figure.style.margin = "16px 0";
     figure.style.padding = "32px";
 
-    // green accent bar the site renders via a ::before pseudo-element
     let accent = document.createElement("div");
     accent.style.width = "40px";
     accent.style.height = "2px";
@@ -245,9 +283,9 @@ function create_quote(element) {
     return figure;
 }
 
-function insert_article(){
-    let html = document.querySelectorAll('[class^="ArticleHeadstyled__ArticleHeader"]')[0];
-    let headline_class = document.querySelectorAll('[class^="Headlinestyled__Headline"]')[1].className;
+function insert_article(html){
+    let headlines = document.querySelectorAll('[class^="Headlinestyled__Headline"]');
+    let headline_class = (headlines[1] || headlines[0]).className;
     let inline_text_class = document.querySelectorAll('[class^="Textstyled__Text"]')[0].className;
     inline_text_class = inline_text_class.match(/\b\w{6}\b/)?.[0];
 
